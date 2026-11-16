@@ -1,0 +1,30 @@
+## Simple Thread-safe Queue Implementation
+
+As the title suggests, this is merely a simple implementation of a thread-safe implementation of a queue. Written in C++, it leverages std::condition_variable from <condition_variable>.
+
+### Inner Workings
+The aformentioned thread-safe queue is a class template we've aplty named `threadsafe_queue`:
+
+
+```cpp
+    <template typename T>
+        class threadsafe_queue {
+            public:
+                //...Member functions
+            private:
+                std::mutex m_mutex;
+                std::queue<T> m_data_queue;
+                std::condition_variable m_data_condition;
+
+        };
+```
+
+
+You can find the complete class definition inside `include/threadsafe_queue.hxx`.
+
+
+Instead of `pushing` and `popping` directly into and off `m_data_queue` respectively, our custom member functions first have the threads executing them aquire locks on `m_mutex` before reading or modifying `m_data_queue` to avoid data races.
+
+
+1. The producer thread pushes some data `T` into `m_data_queue` by first acquiring a lock on said queue. Next, it calls `m_data_condition.notify_one()`.
+2. A sleeping `consumer` thread will be woken up, lock `m_mutex`, and check if there's indeed some data awaiting consumption inside `m_data_queue`. If there is not, it goes back to sleep, and releases the lock. It checks because in the case of multiple consumer threads, another thread might have woken up earlier after `m_data_condition.notify_one()` and already processed the data.
