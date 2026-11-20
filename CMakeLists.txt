@@ -14,7 +14,6 @@ find_package(Threads REQUIRED)
 
 add_executable(
     ThreadSafeQueue
-    source/threadsafe_queue.cxx
     source/main.cxx
 )
 
